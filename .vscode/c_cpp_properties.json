@@ -1,0 +1,29 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/michael/Desktop/3806ICT/catkin_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/michael/Desktop/3806ICT/catkin_ws/src/a3agent/include/**",
+        "/home/michael/Desktop/3806ICT/catkin_ws/src/a3env/include/**",
+        "/home/michael/Desktop/3806ICT/catkin_ws/src/a3planner/include/**",
+        "/home/michael/Desktop/3806ICT/catkin_ws/src/a3test/include/**",
+        "/home/michael/Desktop/3806ICT/catkin_ws/src/turtlebot3_simulations/turtlebot3_fake/include/**",
+        "/home/michael/Desktop/3806ICT/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo/include/**",
+        "/home/michael/Desktop/3806ICT/catkin_ws/src/turtlesim_ex1/include/**",
+        "/home/michael/Desktop/3806ICT/catkin_ws/src/week1/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
