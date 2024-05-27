@@ -2,9 +2,10 @@
 
 int32 row
 int32 col
-int8[144] world # 12x12 grid
+int16[6] hostiles
+uint8[144] world # 12x12 grid
 
 ---
 
 # Response
-int8[24] plan # plan with up to 24 steps
+int16[10] plan # plan with up to 10 steps
