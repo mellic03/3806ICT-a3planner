@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 
 #include "a3planner/plan.h"
+#include "../../a3env/src/common.hpp"
 
 
 /*
