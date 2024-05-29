@@ -8,4 +8,5 @@ uint8[] world # grid as array
 ---
 
 # Response
-int16[10] plan # plan with up to 10 steps
+char[] plan # plan of steps to take
+int32 moves # number of moves in array

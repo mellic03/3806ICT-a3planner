@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <fstream>
 #include <string>
+#include <vector>
 #include <a3planner/plan.h>
 #include "../../a3env/src/common.hpp"
 
@@ -17,7 +18,7 @@ bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, in
 std::string getExecutablePath();
 // function to get the directory of the executable
 
-bool get_moves(char *moves);
+bool get_moves(std::vector<unsigned char> &moves);
 // function to call PAT and read moves from out.txt
 
 // global variables
@@ -55,12 +56,10 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 		ROS_ERROR("Write to world.csp failed.");
 	}
 	// get moves
-	char moves[maxsteps];
+	std::vector<unsigned char> moves;
 	get_moves(moves);
-	for (int i = 0; i < maxsteps; i++)
-	{
-		res.plan[i] = moves[i];
-	}
+	res.plan = moves;
+	res.moves = moves.size();
 
 	return true;
 }
@@ -152,7 +151,7 @@ std::string getExecutablePath()
 	return "";
 }
 
-bool get_moves(char *moves)
+bool get_moves(std::vector<unsigned char> &moves)
 {
 	// run PAT
 	ROS_INFO("Calculating a path to optimize exploration");
@@ -167,7 +166,6 @@ bool get_moves(char *moves)
 	{
 		std::string line;
 		std::string move;
-		int moves_count = 0;
 		while (std::getline(file, line))
 		{
 			if (line[0] == '<')
@@ -179,22 +177,20 @@ bool get_moves(char *moves)
 				{
 					if (move == "moveright")
 					{
-						moves[moves_count] = 'r';
+						moves.push_back('r');
 					}
 					else if (move == "moveup")
 					{
-						moves[moves_count] = 'u';
+						moves.push_back('u');
 					}
 					else if (move == "movedown")
 					{
-						moves[moves_count] = 'd';
+						moves.push_back('d');
 					}
 					else if (move == "moveleft")
 					{
-						moves[moves_count] = 'l';
+						moves.push_back('l');
 					}
-					moves_count++;
-					if (moves_count >= maxsteps) {break;}
 				}
 				break;
 			}
