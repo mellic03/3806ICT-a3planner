@@ -3,7 +3,7 @@
 int32 row
 int32 col
 int16[6] hostiles
-uint8[144] world # 12x12 grid
+uint8[] world # grid as array
 
 ---
 
