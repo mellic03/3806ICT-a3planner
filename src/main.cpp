@@ -172,7 +172,6 @@ bool get_moves(std::vector<unsigned char> &moves)
 			{
 				// create a string stream from the line so that we may read into move
 				std::istringstream ss(line);
-				ss >> move;
 				while (ss >> move)
 				{
 					if (move == "moveright")
