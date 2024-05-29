@@ -39,7 +39,7 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 	if (req.world.size() != a3env::MAP_WIDTH * a3env::MAP_WIDTH)
 	{
 		ROS_ERROR("Received data array of incorrect size");
-		return true;
+		return false;
 	}
 	// convert world to 2d array
 	int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH];
@@ -54,6 +54,7 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 	if (!gen_world_file(world, req.row, req.col, onboard, maxsteps))
 	{
 		ROS_ERROR("Write to world.csp failed.");
+		return false;
 	}
 	// get moves
 	std::vector<unsigned char> moves;
@@ -110,21 +111,34 @@ bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, in
 	std::ofstream file(worldDir);
 	if (!file.is_open())
 	{
-		std::cerr << "Open world.csp failed." << std::endl;
+		ROS_INFO("Open world.csp failed.");
 		return false;
 	}
 	ROS_INFO("Writing to world.csp");
 
 	// write world matrix
-	file << "var world[" << a3env::MAP_WIDTH << "][" << a3env::MAP_WIDTH << "]:{0.." << a3env::MAP_WIDTH - 1 << "} = [\n";
+	file << "var world[" << a3env::MAP_WIDTH << "][" << a3env::MAP_WIDTH << "]:{0.." << a3env::BLOCK_SURVIVOR << "} = [\n";
 	for (int i = 0; i < a3env::MAP_WIDTH; i++)
 	{
 		for (int j = 0; j < a3env::MAP_WIDTH; j++)
 		{
-			if (i == a3env::MAP_WIDTH - 1 && j == a3env::MAP_WIDTH - 1)
+			if (world[i][j] <= a3env::BLOCK_SURVIVOR)
+			{
 				file << world[i][j];
+			}
+			else if (world[i][j] == a3env::BLOCK_HOSTILE)
+			{
+				file << a3env::BLOCK_WALL;
+			}
 			else
-				file << world[i][j] << ", ";
+			{
+				ROS_INFO("Invalid block type in request.");
+				return false;
+			}
+			if (i != a3env::MAP_WIDTH - 1 || j != a3env::MAP_WIDTH - 1)
+			{
+				file << ", ";
+			}
 		}
 		file << "\n";
 	}
