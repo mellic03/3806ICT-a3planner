@@ -12,7 +12,7 @@
 bool gen_defs_file();
 // function to write the definitions file when the service is launched
 
-bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &onBoard, int &maxSteps);
+bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &maxSteps);
 // function to save the received information to world.csp
 
 std::string getExecutablePath();
@@ -30,7 +30,6 @@ std::string PATDir = rootDir + "/MONO-PAT-v3.6.0/PAT3.Console.exe";
 std::string outDir = rootDir + "/catkin_ws/src/a3planner/pat/out.txt";
 std::string searchDir = rootDir + "/catkin_ws/src/a3planner/pat/search.csp";
 // temp global
-int onboard = 0;
 int maxsteps = 10;
 
 bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res)
@@ -105,7 +104,7 @@ bool gen_defs_file()
 	return true;
 }
 
-bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &onBoard, int &maxSteps)
+bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &maxSteps)
 {
 	// open world.csp file to write to
 	std::ofstream file(worldDir);
@@ -146,7 +145,6 @@ bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, in
 
 	file << "var xpos:{0.." << a3env::MAP_WIDTH - 1 << "} = " << xpos << ";\n";
 	file << "var ypos:{0.." << a3env::MAP_WIDTH - 1 << "} = " << ypos << ";\n";
-	file << "var onBoard:{0..2} = " << onBoard << ";\n";
 	file << "#define maxSteps " << maxSteps << ";\n";
 
 	file.close();
