@@ -50,7 +50,7 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 		}
 	}
 	// write world.csp
-	if (!gen_world_file(world, req.row, req.col, onboard, maxsteps))
+	if (!gen_world_file(world, req.row, req.col, maxsteps))
 	{
 		ROS_ERROR("Write to world.csp failed.");
 		return false;
