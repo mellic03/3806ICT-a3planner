@@ -1,0 +1,11 @@
+#define Seen 1;
+#define Unseen 0;
+#define Hostile 2;
+#define Survivor 3;
+
+#define Home_x 0;
+#define Home_y 0;
+#define Rows 12;
+#define Cols 12;
+#define maxCapacity 2;
+#define vision 1;
