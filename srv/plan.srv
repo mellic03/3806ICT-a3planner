@@ -2,7 +2,9 @@
 
 int32 row
 int32 col
-uint8[] world # grid as array
+uint16[] agent_cells # cells which contain agents
+uint16[] hostile_cells # cells which contain hostiles
+uint8[]  world # grid as array
 
 ---
 
