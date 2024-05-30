@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <cmath>
 #include <a3planner/plan.h>
 #include "../../a3env/src/common.hpp"
 
@@ -21,6 +22,9 @@ std::string getExecutablePath();
 bool get_moves(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], a3planner::plan::Request &req, std::vector<unsigned char> &moves);
 // function to call PAT and read moves from out.txt
 
+int manhattan_distance(int x1, int y1, int x2, int y2);
+// function to calculate the manhattan distance between two coordinates (used to determine which agent should attempt a rescue)
+
 // global variables
 std::string exeDir = getExecutablePath();
 std::string rootDir = exeDir.substr(0, exeDir.find("catkin_ws") - 1); // catkin_ws directory is located here
@@ -30,6 +34,12 @@ std::string PATDir = rootDir + "/MONO-PAT-v3.6.0/PAT3.Console.exe";
 std::string outDir = rootDir + "/catkin_ws/src/a3planner/pat/out.txt";
 std::string searchDir = rootDir + "/catkin_ws/src/a3planner/pat/search.csp";
 int maxsteps = 10;
+bool attempt_rescue = false;
+int survivor_x = 0;
+int survivor_y = 0;
+bool go_home = true;
+int unknown_x = 0;
+int unknown_y = 0;
 
 bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res)
 {
@@ -39,6 +49,9 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 		ROS_ERROR("Received data array of incorrect size");
 		return false;
 	}
+	// reset bools
+	attempt_rescue = false;
+	go_home = true;
 	// convert world to 2d array
 	a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH];
 	for (int i = 0; i < a3env::MAP_WIDTH; i++)
@@ -49,6 +62,17 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 			switch (block)
 			{
 				case a3env::BLOCK_UNKNOWN:
+					if (go_home)
+					{
+						unknown_x = i;
+						unknown_y = j;
+						go_home = false;
+					}
+					else if (manhattan_distance(req.row, req.col, i, j) < manhattan_distance(req.row, req.col, unknown_x, unknown_y))
+					{
+						unknown_x = i;
+						unknown_y = j;
+					}
 					world[i][j] = block;
 					break;
 				case a3env::BLOCK_AIR:
@@ -222,4 +246,9 @@ bool get_moves(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], a3pla
 		return false;
 	}
 	return true;
+}
+
+int manhattan_distance(int x1, int y1, int x2, int y2)
+{
+	return abs(x1 - x2) + abs(y1 - y2);
 }
