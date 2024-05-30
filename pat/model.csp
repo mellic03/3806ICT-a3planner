@@ -9,22 +9,15 @@ This file defines the actions that can be taken by the rescue robot.
 // condition definitions
 #define DepthLimitCond steps < maxSteps;
 
-// conditions to check if cell is visited
-#define UpVisited (|| i:{0..maxSteps - 1}@(visited[i][0] == xpos - 1 && visited[i][1] == ypos));
-#define DownVisited (|| i:{0..maxSteps - 1}@(visited[i][0] == xpos + 1 && visited[i][1] == ypos));
-#define LeftVisited (|| i:{0..maxSteps - 1}@(visited[i][0] == xpos && visited[i][1] == ypos - 1));
-#define RightVisited (|| i:{0..maxSteps - 1}@(visited[i][0] == xpos && visited[i][1] == ypos + 1));
-
 // condition definitions for movement
-#define MoveUpCond (xpos != 0) && (world[xpos-1][ypos] != Hostile) && !UpVisited;
-#define MoveDownCond (xpos != Rows - 1) && (world[xpos+1][ypos] != Hostile) && !DownVisited;
-#define MoveLeftCond (ypos != 0) && (world[xpos][ypos-1] != Hostile) && !LeftVisited;
-#define MoveRightCond (ypos != Cols - 1) && (world[xpos][ypos+1] != Hostile) && !RightVisited;
+#define MoveUpCond (xpos != 0) && (world[xpos-1][ypos] != Hostile);
+#define MoveDownCond (xpos != Rows - 1) && (world[xpos+1][ypos] != Hostile);
+#define MoveLeftCond (ypos != 0) && (world[xpos][ypos-1] != Hostile);
+#define MoveRightCond (ypos != Cols - 1) && (world[xpos][ypos+1] != Hostile);
 
 // variables
-var steps = 0;
-var surveyed = 0;
-var visited[maxSteps][2] = [-1(2 * maxSteps)];
+hvar steps = 0;
+hvar surveyed = 0;
 
 // Process to update cells within the given range
 UpdateSeenCells() = 
@@ -39,9 +32,9 @@ UpdateSeenCells() =
             while (dy <= vision)
             {
                 var newY = ypos + dy;
-                if (newY >= 0 && newY < Cols && world[newX][newY] == 0)
+                if (newY >= 0 && newY < Cols && world[newX][newY] == Unseen)
                 {
-                    world[newX][newY] = 1; // Mark the cell as seen
+                    world[newX][newY] = Seen; // Mark the cell as seen
                     surveyed++;
                 }
             dy++;
@@ -52,13 +45,10 @@ UpdateSeenCells() =
 } -> Skip;
 
 // base movement tasks
-MoveUp() = [MoveUpCond]moveup{visited[steps][0] = xpos; visited[steps][1] = ypos; xpos = xpos - 1; steps++;} -> UpdateSeenCells;
-MoveDown() = [MoveDownCond]movedown{visited[steps][0] = xpos; visited[steps][1] = ypos; xpos = xpos + 1; steps++;} -> UpdateSeenCells;
-MoveLeft() = [MoveLeftCond]moveleft{visited[steps][0] = xpos; visited[steps][1] = ypos; ypos = ypos - 1; steps++;} -> UpdateSeenCells;
-MoveRight() = [MoveRightCond]moveright{visited[steps][0] = xpos; visited[steps][1] = ypos; ypos = ypos + 1; steps++;} -> UpdateSeenCells;
+MoveUp() = [MoveUpCond]moveup{world[xpos][ypos] = Hostile; xpos = xpos - 1; steps++;} -> UpdateSeenCells;
+MoveDown() = [MoveDownCond]movedown{world[xpos][ypos] = Hostile; xpos = xpos + 1; steps++;} -> UpdateSeenCells;
+MoveLeft() = [MoveLeftCond]moveleft{world[xpos][ypos] = Hostile; ypos = ypos - 1; steps++;} -> UpdateSeenCells;
+MoveRight() = [MoveRightCond]moveright{world[xpos][ypos] = Hostile; ypos = ypos + 1; steps++;} -> UpdateSeenCells;
 
 // compound movement task
-Move() = MoveUp() [] MoveDown() [] MoveLeft() [] MoveRight();
-
-// Survery the map
-Survey() = Move(); Survey();
+Move() = [DepthLimitCond] (MoveUp() [] MoveDown() [] MoveLeft() [] MoveRight());

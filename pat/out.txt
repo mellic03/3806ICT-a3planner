@@ -1,20 +1,18 @@
 =======================================================
 Assertion: CompleteSurvey() reaches goalOverall with max((surveyed - steps))
 ********Verification Result********
-The Assertion (CompleteSurvey() reaches goalOverall with max((surveyed - steps))) is VALID and max((surveyed - steps)) = 26 among 55508 reachable states.
-The following trace leads to a state where the condition is satisfied with the above value.
-<init -> moveright -> τ -> moveright -> τ -> moveright -> τ -> moveright -> τ -> moveright -> τ -> moveright -> τ -> movedown -> τ -> movedown -> τ -> movedown -> τ -> moveleft -> τ>
+The Assertion (CompleteSurvey() reaches goalOverall with max((surveyed - steps))) is NEITHER PROVED NOR DISPROVED.
 
 ********Verification Setting********
 Admissible Behavior: All
-Search Engine: Shortest Witness Trace using Breadth First Search
+Search Engine: First Witness Trace using Depth First Search
 System Abstraction: False
 
 
 ********Verification Statistics********
-Visited States:92765
-Total Transitions:92764
-Time Used:8.9406171s
-Estimated Memory Used:333733.152KB
+Visited States:0
+Total Transitions:45
+Time Used:0.0123115s
+Estimated Memory Used:8532.944KB
 
 
