@@ -2,8 +2,6 @@
 #define Unseen 0;
 #define Hostile 2;
 #define Survivor 3;
-#define Home_x 1;
-#define Home_y 1;
 #define Rows 12;
 #define Cols 12;
 #define vision 1;

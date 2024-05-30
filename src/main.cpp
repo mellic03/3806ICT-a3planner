@@ -12,13 +12,13 @@
 bool gen_defs_file();
 // function to write the definitions file when the service is launched
 
-bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &maxSteps);
+bool gen_world_file(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &xtarget, int &ytarget);
 // function to save the received information to world.csp
 
 std::string getExecutablePath();
 // function to get the directory of the executable
 
-bool get_moves(std::vector<unsigned char> &moves);
+bool get_moves(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], a3planner::plan::Request &req, std::vector<unsigned char> &moves);
 // function to call PAT and read moves from out.txt
 
 // global variables
@@ -29,7 +29,6 @@ std::string defsDir = rootDir + "/catkin_ws/src/a3planner/pat/definitions.csp";
 std::string PATDir = rootDir + "/MONO-PAT-v3.6.0/PAT3.Console.exe";
 std::string outDir = rootDir + "/catkin_ws/src/a3planner/pat/out.txt";
 std::string searchDir = rootDir + "/catkin_ws/src/a3planner/pat/search.csp";
-// temp global
 int maxsteps = 10;
 
 bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res)
@@ -41,26 +40,41 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 		return false;
 	}
 	// convert world to 2d array
-	int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH];
+	a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH];
 	for (int i = 0; i < a3env::MAP_WIDTH; i++)
 	{
 		for (int j = 0; j < a3env::MAP_WIDTH; j++)
 		{
-			world[i][j] = req.world[i * a3env::MAP_WIDTH + j];
+			a3env::BlockType block = static_cast<a3env::BlockType>(req.world[i * a3env::MAP_WIDTH + j]);
+			switch (block)
+			{
+				case a3env::BLOCK_UNKNOWN:
+					world[i][j] = block;
+					break;
+				case a3env::BLOCK_AIR:
+					world[i][j] = block;
+					break;
+				case a3env::BLOCK_WALL:
+					world[i][j] = block;
+					break;
+				case a3env::BLOCK_SURVIVOR:
+					world[i][j] = block;
+					break;
+				default:
+					ROS_ERROR("Unexpected data in world matrix: %d", block);
+					return false;
+			}
 		}
-	}
-	// write world.csp
-	if (!gen_world_file(world, req.row, req.col, maxsteps))
-	{
-		ROS_ERROR("Write to world.csp failed.");
-		return false;
 	}
 	// get moves
 	std::vector<unsigned char> moves;
-	get_moves(moves);
+	if (!get_moves(world, req, moves))
+	{
+		ROS_ERROR("Error fetching plan.");
+		return false;
+	}
 	res.plan = moves;
 	res.moves = moves.size();
-
 	return true;
 }
 
@@ -93,8 +107,6 @@ bool gen_defs_file()
 	file << "#define Unseen " << a3env::BLOCK_UNKNOWN << ";\n";
 	file << "#define Hostile " << a3env::BLOCK_WALL << ";\n";
 	file << "#define Survivor " << a3env::BLOCK_SURVIVOR << ";\n";
-	file << "#define Home_x " << 1 << ";\n";
-	file << "#define Home_y " << 1 << ";\n";
 	file << "#define Rows " << a3env::MAP_WIDTH << ";\n";
 	file << "#define Cols " << a3env::MAP_WIDTH << ";\n";
 	file << "#define vision 1;\n";
@@ -103,7 +115,7 @@ bool gen_defs_file()
 	return true;
 }
 
-bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &maxSteps)
+bool gen_world_file(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &xtarget, int &ytarget)
 {
 	// open world.csp file to write to
 	std::ofstream file(worldDir);
@@ -114,29 +126,13 @@ bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, in
 	}
 	ROS_INFO("Writing to world.csp");
 
-	// define target location
-	int xtarget = 0;
-	int ytarget = 0;
-
 	// write world matrix
 	file << "var world[" << a3env::MAP_WIDTH << "][" << a3env::MAP_WIDTH << "]:{0.." << a3env::BLOCK_SURVIVOR << "} = [\n";
 	for (int i = 0; i < a3env::MAP_WIDTH; i++)
 	{
 		for (int j = 0; j < a3env::MAP_WIDTH; j++)
 		{
-			if (world[i][j] <= a3env::BLOCK_SURVIVOR)
-			{
-				file << world[i][j];
-			}
-			else if (world[i][j] == a3env::BLOCK_HOSTILE)
-			{
-				file << a3env::BLOCK_WALL;
-			}
-			else
-			{
-				ROS_INFO("Invalid block type in request.");
-				return false;
-			}
+			file << world[i][j];
 			if (i != a3env::MAP_WIDTH - 1 || j != a3env::MAP_WIDTH - 1)
 			{
 				file << ", ";
@@ -150,7 +146,7 @@ bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, in
 	file << "var ypos:{0.." << a3env::MAP_WIDTH - 1 << "} = " << ypos << ";\n";
 	file << "var xtarget:{0.." << a3env::MAP_WIDTH - 1 << "} = " << xtarget << ";\n";
 	file << "var ytarget:{0.." << a3env::MAP_WIDTH - 1 << "} = " << ytarget << ";\n";
-	file << "#define maxSteps " << maxSteps << ";\n";
+	file << "#define maxSteps " << maxsteps << ";\n";
 
 	file.close();
 	return true;
@@ -168,8 +164,15 @@ std::string getExecutablePath()
 	return "";
 }
 
-bool get_moves(std::vector<unsigned char> &moves)
+bool get_moves(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], a3planner::plan::Request &req, std::vector<unsigned char> &moves)
 {
+	// write world.csp
+	if (!gen_world_file(world, req.row, req.col, req.home_row, req.home_col))
+	{
+		ROS_ERROR("Write to world.csp failed.");
+		return false;
+	}
+
 	// run PAT
 	ROS_INFO("Calculating a path to optimize exploration");
 	if (std::system(("mono " + PATDir + " -engine 1 " + searchDir + " " + outDir).c_str()) < 0)
