@@ -2,7 +2,6 @@
 
 int32 row
 int32 col
-int16[6] hostiles
 uint8[] world # grid as array
 
 ---

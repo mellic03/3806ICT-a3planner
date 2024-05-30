@@ -93,18 +93,17 @@ bool gen_defs_file()
 	file << "#define Unseen " << a3env::BLOCK_UNKNOWN << ";\n";
 	file << "#define Hostile " << a3env::BLOCK_WALL << ";\n";
 	file << "#define Survivor " << a3env::BLOCK_SURVIVOR << ";\n";
-	file << "#define Home_x " << 0 << ";\n";
-	file << "#define Home_y " << 0 << ";\n";
+	file << "#define Home_x " << 1 << ";\n";
+	file << "#define Home_y " << 1 << ";\n";
 	file << "#define Rows " << a3env::MAP_WIDTH << ";\n";
 	file << "#define Cols " << a3env::MAP_WIDTH << ";\n";
-	file << "#define maxCapacity " << 2 << ";\n";
-	file << "#define vision " << 1 << ";\n";
+	file << "#define vision 1;\n";
 
 	file.close();
 	return true;
 }
 
-bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &maxSteps);
+bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &maxSteps)
 {
 	// open world.csp file to write to
 	std::ofstream file(worldDir);
