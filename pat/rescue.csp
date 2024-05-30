@@ -1,0 +1,10 @@
+﻿#include "model.csp";
+
+// Goal definitions
+#define goalReachSurvivor world[xpos][ypos] == Survivor;
+#define goalSurvivorGone (&& i:{0..Rows - 1}@(&& j:{0..Cols - 1}@(world[i][j] != Survivor)));
+#define goalOverall goalReachSurvivor || goalSurvivorGone;
+
+CompleteRescue() = [!goalOverall]Move();CompleteRescue();
+
+#assert CompleteRescue() reaches goalOverall with max(surveyed);

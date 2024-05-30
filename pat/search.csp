@@ -1,9 +1,10 @@
 ﻿#include "model.csp";
 
 // Goal definitions
-#define goalCompleteSurvey (&& i:{0..Rows - 1}@(&& j:{0..Cols - 1}@(world[i][j] != Unseen)));	
-#define goalDepthReached steps >= maxSteps;	
-#define goalOverall goalDepthReached || goalCompleteSurvey;
+#define goalDepthReached !(steps < maxSteps);
+#define goalCompleteSurvey (&& i:{0..Rows - 1}@(&& j:{0..Cols - 1}@(world[i][j] != Unseen)));
+#define goalProgressMade surveyed > 0;
+#define goalOverall (goalDepthReached && goalProgressMade)|| goalCompleteSurvey;
 
 CompleteSurvey() = [!goalOverall]Move();CompleteSurvey();
 

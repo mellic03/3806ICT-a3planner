@@ -104,7 +104,7 @@ bool gen_defs_file()
 	return true;
 }
 
-bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &maxSteps)
+bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &maxSteps);
 {
 	// open world.csp file to write to
 	std::ofstream file(worldDir);
@@ -114,6 +114,10 @@ bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, in
 		return false;
 	}
 	ROS_INFO("Writing to world.csp");
+
+	// define target location
+	int xtarget = 0;
+	int ytarget = 0;
 
 	// write world matrix
 	file << "var world[" << a3env::MAP_WIDTH << "][" << a3env::MAP_WIDTH << "]:{0.." << a3env::BLOCK_SURVIVOR << "} = [\n";
@@ -145,6 +149,8 @@ bool gen_world_file(int world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, in
 
 	file << "var xpos:{0.." << a3env::MAP_WIDTH - 1 << "} = " << xpos << ";\n";
 	file << "var ypos:{0.." << a3env::MAP_WIDTH - 1 << "} = " << ypos << ";\n";
+	file << "var xtarget:{0.." << a3env::MAP_WIDTH - 1 << "} = " << xtarget << ";\n";
+	file << "var ytarget:{0.." << a3env::MAP_WIDTH - 1 << "} = " << ytarget << ";\n";
 	file << "#define maxSteps " << maxSteps << ";\n";
 
 	file.close();

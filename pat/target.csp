@@ -1,0 +1,14 @@
+﻿#include "model.csp";
+
+// Distance calculations
+#define xdist if (xpos > xtarget) {xpos - xtarget} else {xtarget - xpos};
+#define ydist if (ypos > ytarget) {ypos - ytarget} else {ytarget - ypos};
+
+// Goal definitions
+#define goalDepthReached !(steps < maxSteps);
+#define goalTargetReached xpos == xtarget && ypos == ytarget;	
+#define goalOverall goalDepthReached || goalTargetReached;
+
+CompleteTarget() = [!goalOverall]Move();CompleteTarget();
+
+#assert CompleteTarget() reaches goalOverall with min(xdist + ydist);
