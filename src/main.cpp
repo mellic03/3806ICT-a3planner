@@ -13,7 +13,7 @@
 bool gen_defs_file();
 // function to write the definitions file when the service is launched
 
-bool gen_world_file(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &xtarget, int &ytarget);
+bool gen_world_file(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos);
 // function to save the received information to world.csp
 
 std::string getExecutablePath();
@@ -25,6 +25,12 @@ bool get_moves(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], a3pla
 int manhattan_distance(int x1, int y1, int x2, int y2);
 // function to calculate the manhattan distance between two coordinates (used to determine which agent should attempt a rescue)
 
+bool init_rescue(a3planner::plan::Request &req, int surv_x, int surv_y);
+// function to determine whether rescue should be made by this agent.
+
+bool read_out(std::vector<unsigned char> &moves);
+// function to read out.txt and place moves into provided vector.
+
 // global variables
 std::string exeDir = getExecutablePath();
 std::string rootDir = exeDir.substr(0, exeDir.find("catkin_ws") - 1); // catkin_ws directory is located here
@@ -33,13 +39,13 @@ std::string defsDir = rootDir + "/catkin_ws/src/a3planner/pat/definitions.csp";
 std::string PATDir = rootDir + "/MONO-PAT-v3.6.0/PAT3.Console.exe";
 std::string outDir = rootDir + "/catkin_ws/src/a3planner/pat/out.txt";
 std::string searchDir = rootDir + "/catkin_ws/src/a3planner/pat/search.csp";
+std::string rescueDir = rootDir + "/catkin_ws/src/a3planner/pat/rescue.csp";
+std::string targetDir = rootDir + "/catkin_ws/src/a3planner/pat/target.csp";
 int maxsteps = 10;
 bool attempt_rescue = false;
-int survivor_x = 0;
-int survivor_y = 0;
 bool go_home = true;
-int unknown_x = 0;
-int unknown_y = 0;
+int target_x = 0;
+int target_y = 0;
 
 bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res)
 {
@@ -49,9 +55,11 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 		ROS_ERROR("Received data array of incorrect size");
 		return false;
 	}
-	// reset bools
+	// reset targeting
 	attempt_rescue = false;
 	go_home = true;
+	target_x = req.home_row;
+	target_y = req.home_col;
 	// convert world to 2d array
 	a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH];
 	for (int i = 0; i < a3env::MAP_WIDTH; i++)
@@ -64,14 +72,14 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 				case a3env::BLOCK_UNKNOWN:
 					if (go_home)
 					{
-						unknown_x = i;
-						unknown_y = j;
+						target_x = i;
+						target_y = j;
 						go_home = false;
 					}
-					else if (manhattan_distance(req.row, req.col, i, j) < manhattan_distance(req.row, req.col, unknown_x, unknown_y))
+					else if (manhattan_distance(req.row, req.col, i, j) < manhattan_distance(req.row, req.col, target_x, target_y))
 					{
-						unknown_x = i;
-						unknown_y = j;
+						target_x = i;
+						target_y = j;
 					}
 					world[i][j] = block;
 					break;
@@ -82,6 +90,7 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 					world[i][j] = block;
 					break;
 				case a3env::BLOCK_SURVIVOR:
+					attempt_rescue = init_rescue(req, i, j);
 					world[i][j] = block;
 					break;
 				default:
@@ -90,6 +99,21 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 			}
 		}
 	}
+
+	//insert hostiles and agents to world matrix
+	for (int i=0; i < a3env::NUM_HOSTILES; i++)
+	{
+		int hostile_x = req.hostile_cells[i] / a3env::MAP_WIDTH;
+		int hostile_y = req.hostile_cells[i] % a3env::MAP_WIDTH;
+		world[hostile_x][hostile_y] = a3env::BLOCK_WALL;
+	}
+	for (int i=0; i < a3env::NUM_AGENTS; i++)
+	{
+		int agent_x = req.agent_cells[i] / a3env::MAP_WIDTH;
+		int agent_y = req.agent_cells[i] % a3env::MAP_WIDTH;
+		world[agent_x][agent_y] = a3env::BLOCK_WALL;
+	}
+
 	// get moves
 	std::vector<unsigned char> moves;
 	if (!get_moves(world, req, moves))
@@ -139,7 +163,7 @@ bool gen_defs_file()
 	return true;
 }
 
-bool gen_world_file(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos, int &xtarget, int &ytarget)
+bool gen_world_file(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], int &xpos, int &ypos)
 {
 	// open world.csp file to write to
 	std::ofstream file(worldDir);
@@ -168,8 +192,8 @@ bool gen_world_file(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], 
 
 	file << "var xpos:{0.." << a3env::MAP_WIDTH - 1 << "} = " << xpos << ";\n";
 	file << "var ypos:{0.." << a3env::MAP_WIDTH - 1 << "} = " << ypos << ";\n";
-	file << "var xtarget:{0.." << a3env::MAP_WIDTH - 1 << "} = " << xtarget << ";\n";
-	file << "var ytarget:{0.." << a3env::MAP_WIDTH - 1 << "} = " << ytarget << ";\n";
+	file << "var xtarget:{0.." << a3env::MAP_WIDTH - 1 << "} = " << target_x << ";\n";
+	file << "var ytarget:{0.." << a3env::MAP_WIDTH - 1 << "} = " << target_y << ";\n";
 	file << "#define maxSteps " << maxsteps << ";\n";
 
 	file.close();
@@ -191,7 +215,7 @@ std::string getExecutablePath()
 bool get_moves(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], a3planner::plan::Request &req, std::vector<unsigned char> &moves)
 {
 	// write world.csp
-	if (!gen_world_file(world, req.row, req.col, req.home_row, req.home_col))
+	if (!gen_world_file(world, req.row, req.col))
 	{
 		ROS_ERROR("Write to world.csp failed.");
 		return false;
@@ -199,11 +223,77 @@ bool get_moves(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], a3pla
 
 	// run PAT
 	ROS_INFO("Calculating a path to optimize exploration");
-	if (std::system(("mono " + PATDir + " -engine 1 " + searchDir + " " + outDir).c_str()) < 0)
+	// select file to run
+	std::string processDir = targetDir;
+	if(attempt_rescue)
 	{
-		ROS_INFO("There has been a fatal error!");
-		exit(1);
+		processDir = rescueDir;
 	}
+	else if(!go_home)
+	{
+		processDir = searchDir;
+	}
+	// PAT system call
+	if (std::system(("mono " + PATDir + " -engine 1 " + processDir + " " + outDir).c_str()) < 0)
+	{
+		ROS_ERROR("Fatal error in system call.");
+		return false;
+	}
+	// read out.txt
+	if (!read_out(moves))
+	{
+		return false;
+	}
+	if (moves.size() == 0 && processDir != targetDir) // run target.csp if first model assertion was invalid
+	{
+		// PAT system call
+		if (std::system(("mono " + PATDir + " -engine 1 " + targetDir + " " + outDir).c_str()) < 0)
+		{
+			ROS_ERROR("Fatal error in system call.");
+			return false;
+		}
+		// read out.txt
+		if (!read_out(moves))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+int manhattan_distance(int x1, int y1, int x2, int y2)
+{
+	return abs(x1 - x2) + abs(y1 - y2);
+}
+
+bool init_rescue(a3planner::plan::Request &req, int surv_x, int surv_y)
+{
+	std::vector<int> dists;
+	for (int i=0; i < a3env::NUM_AGENTS; i++)
+	{
+		int agent_x = req.agent_cells[i] / a3env::MAP_WIDTH;
+		int agent_y = req.agent_cells[i] % a3env::MAP_WIDTH;
+		int dist = manhattan_distance(agent_x, agent_y, surv_x, surv_y);
+		auto it = std::lower_bound(dists.begin(), dists.end(), dist);
+		dists.insert(it, dist);
+	}
+	int agent_x = req.row;
+	int agent_y = req.col;
+	int dist = manhattan_distance(agent_x, agent_y, surv_x, surv_y);
+	if (dist > dists[dists.size() / 2] || dist > manhattan_distance(agent_x, agent_y, target_x, target_y))
+	{
+		return attempt_rescue;
+	}
+	else
+	{
+		target_x = surv_x;
+		target_y = surv_y;
+		return true;
+	}
+}
+
+bool read_out(std::vector<unsigned char> &moves)
+{
 	// read out.txt
 	std::ifstream file(outDir);
 	if (file.is_open())
@@ -246,9 +336,4 @@ bool get_moves(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], a3pla
 		return false;
 	}
 	return true;
-}
-
-int manhattan_distance(int x1, int y1, int x2, int y2)
-{
-	return abs(x1 - x2) + abs(y1 - y2);
 }
