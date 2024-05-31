@@ -11,4 +11,4 @@
 
 CompleteTarget() = [!goalTargetReached]Move();CompleteTarget();
 
-#assert CompleteTarget() reaches goalOverall with min(xdist + ydist - 2 * steps);
+#assert CompleteTarget() reaches goalOverall with min((xdist + ydist) * (maxSteps + 1 - steps));
