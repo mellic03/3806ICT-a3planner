@@ -5,10 +5,10 @@
 #define ydist if (ypos > ytarget) {ypos - ytarget} else {ytarget - ypos};
 
 // Goal definitions
-#define goalDepthReached !(steps < maxSteps);
+#define goalMoved (steps > 0);
 #define goalTargetReached xpos == xtarget && ypos == ytarget;	
-#define goalOverall goalDepthReached || goalTargetReached;
+#define goalOverall goalMoved || goalTargetReached;
 
-CompleteTarget() = [!goalOverall]Move();CompleteTarget();
+CompleteTarget() = [!goalTargetReached]Move();CompleteTarget();
 
-#assert CompleteTarget() reaches goalOverall with min(xdist + ydist);
+#assert CompleteTarget() reaches goalOverall with min(xdist + ydist - 2 * steps);
