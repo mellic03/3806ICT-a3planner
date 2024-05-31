@@ -106,9 +106,12 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 	//insert hostiles and agents to world matrix
 	for (int i=0; i < a3env::NUM_HOSTILES; i++)
 	{
-		int hostile_x = req.hostile_cells[i] / a3env::MAP_WIDTH;
-		int hostile_y = req.hostile_cells[i] % a3env::MAP_WIDTH;
-		world[hostile_x][hostile_y] = a3env::BLOCK_WALL;
+		if (req.hostile_cells[i] != 65535)
+		{
+			int hostile_x = req.hostile_cells[i] / a3env::MAP_WIDTH;
+			int hostile_y = req.hostile_cells[i] % a3env::MAP_WIDTH;
+			world[hostile_x][hostile_y] = a3env::BLOCK_WALL;
+		}
 	}
 	for (int i=0; i < a3env::NUM_AGENTS; i++)
 	{
