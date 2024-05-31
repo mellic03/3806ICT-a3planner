@@ -117,9 +117,6 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 	{
 		int agent_x = req.agent_cells[i] / a3env::MAP_WIDTH;
 		int agent_y = req.agent_cells[i] % a3env::MAP_WIDTH;
-		ROS_INFO("got agent coordinates: %d, %d", agent_x, agent_y);
-		ROS_INFO("should be: %d, %d", req.row, req.col);
-		ROS_INFO("int received: %d", req.agent_cells[i]);
 		world[agent_x][agent_y] = a3env::BLOCK_WALL;
 	}
 	ROS_INFO("Marked hostiles and agents in world view successfully.");
@@ -289,7 +286,7 @@ bool init_rescue(a3planner::plan::Request &req, int surv_x, int surv_y)
 	int agent_x = req.row;
 	int agent_y = req.col;
 	int dist = manhattan_distance(agent_x, agent_y, surv_x, surv_y);
-	if (dist > dists[dists.size() / 2] || dist > manhattan_distance(agent_x, agent_y, target_x, target_y))
+	if (dist > dists[dists.size() / 2] || (attempt_rescue && dist > manhattan_distance(agent_x, agent_y, target_x, target_y)))
 	{
 		return attempt_rescue;
 	}
