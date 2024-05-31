@@ -49,6 +49,7 @@ int target_y = 0;
 
 bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res)
 {
+	ROS_INFO("Service call initiated");
 	// check size matches
 	if (req.world.size() != a3env::MAP_WIDTH * a3env::MAP_WIDTH)
 	{
@@ -61,6 +62,7 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 	target_x = req.home_row;
 	target_y = req.home_col;
 	// convert world to 2d array
+	ROS_INFO("Constructing Matrix");
 	a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH];
 	for (int i = 0; i < a3env::MAP_WIDTH; i++)
 	{
@@ -99,7 +101,8 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 			}
 		}
 	}
-
+	ROS_INFO("Matrix Constructed Successfully.");
+	ROS_INFO("Marking hostiles and agents in world view.");
 	//insert hostiles and agents to world matrix
 	for (int i=0; i < a3env::NUM_HOSTILES; i++)
 	{
@@ -111,9 +114,12 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 	{
 		int agent_x = req.agent_cells[i] / a3env::MAP_WIDTH;
 		int agent_y = req.agent_cells[i] % a3env::MAP_WIDTH;
+		ROS_INFO("got agent coordinates: %d, %d", agent_x, agent_y);
+		ROS_INFO("should be: %d, %d", req.row, req.col);
+		ROS_INFO("int received: %d", req.agent_cells[i]);
 		world[agent_x][agent_y] = a3env::BLOCK_WALL;
 	}
-
+	ROS_INFO("Marked hostiles and agents in world view successfully.");
 	// get moves
 	std::vector<unsigned char> moves;
 	if (!get_moves(world, req, moves))
