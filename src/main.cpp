@@ -268,6 +268,28 @@ bool get_moves(a3env::BlockType world[a3env::MAP_WIDTH][a3env::MAP_WIDTH], a3pla
 			return false;
 		}
 	}
+	if (moves.size() == 0 && (target_x != req.home_row || target_y != req.home_col)) // run target.csp again if still no moves, with inverse target (unless target is home).
+	{
+		target_x = a3env::MAP_WIDTH - target_x;
+		target_y = a3env::MAP_WIDTH - target_x;
+		// write world.csp
+		if (!gen_world_file(world, req.row, req.col))
+		{
+			ROS_ERROR("Write to world.csp failed.");
+			return false;
+		}
+		// PAT system call
+		if (std::system(("mono " + PATDir + " -engine 1 " + targetDir + " " + outDir).c_str()) < 0)
+		{
+			ROS_ERROR("Fatal error in system call.");
+			return false;
+		}
+		// read out.txt
+		if (!read_out(moves))
+		{
+			return false;
+		}
+	}
 	return true;
 }
 
