@@ -318,19 +318,19 @@ bool read_out(std::vector<unsigned char> &moves)
 				std::istringstream ss(line);
 				while (ss >> move)
 				{
-					if (move == "moveright")
+					if (move == "moveright" || move == "moveright>")
 					{
 						moves.push_back('r');
 					}
-					else if (move == "moveup")
+					else if (move == "moveup" || move == "moveup>")
 					{
 						moves.push_back('u');
 					}
-					else if (move == "movedown")
+					else if (move == "movedown" || move == "movedown>")
 					{
 						moves.push_back('d');
 					}
-					else if (move == "moveleft")
+					else if (move == "moveleft" || move == "moveleft>")
 					{
 						moves.push_back('l');
 					}
