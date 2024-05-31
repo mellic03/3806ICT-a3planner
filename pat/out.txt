@@ -1,9 +1,9 @@
 =======================================================
-Assertion: CompleteTarget() reaches goalOverall with min((( if ((xpos > xtarget)) {(xpos - xtarget)} else {(xtarget - xpos)} +  if ((ypos > ytarget)) {(ypos - ytarget)} else {(ytarget - ypos)}) - (2 * steps)))
+Assertion: CompleteSurvey() reaches goalOverall with max((surveyed - steps))
 ********Verification Result********
-The Assertion (CompleteTarget() reaches goalOverall with min((( if ((xpos > xtarget)) {(xpos - xtarget)} else {(xtarget - xpos)} +  if ((ypos > ytarget)) {(ypos - ytarget)} else {(ytarget - ypos)}) - (2 * steps)))) is VALID and min((( if ((xpos > xtarget)) {(xpos - xtarget)} else {(xtarget - xpos)} +  if ((ypos > ytarget)) {(ypos - ytarget)} else {(ytarget - ypos)}) - (2 * steps))) = -17 among 224 reachable states.
+The Assertion (CompleteSurvey() reaches goalOverall with max((surveyed - steps))) is VALID and max((surveyed - steps)) = 5 among 172 reachable states.
 The following trace leads to a state where the condition is satisfied with the above value.
-<init -> moveleft -> τ -> movedown -> τ -> moveright -> τ -> moveright -> τ -> moveright -> τ -> moveright -> τ -> movedown -> τ -> movedown -> τ -> moveright -> τ -> moveright>
+<init -> moveleft -> τ -> moveup -> τ -> moveup -> τ -> moveleft -> τ -> moveleft -> τ -> moveleft -> τ -> moveleft -> τ -> movedown -> τ -> movedown -> τ -> movedown -> τ>
 
 ********Verification Setting********
 Admissible Behavior: All
@@ -12,9 +12,9 @@ System Abstraction: False
 
 
 ********Verification Statistics********
-Visited States:225
-Total Transitions:224
-Time Used:0.0287287s
-Estimated Memory Used:8899.464KB
+Visited States:489
+Total Transitions:488
+Time Used:0.0486875s
+Estimated Memory Used:9918.312KB
 
 

@@ -7,4 +7,4 @@
 
 CompleteRescue() = [!goalOverall]Move();CompleteRescue();
 
-#assert CompleteRescue() reaches goalOverall with max(surveyed);
+#assert CompleteRescue() reaches goalOverall with min(steps);
