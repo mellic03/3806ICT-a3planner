@@ -106,9 +106,8 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 	//insert hostiles and agents to world matrix
 	for (int i=0; i < a3env::NUM_HOSTILES; i++)
 	{
-		if (req.hostile_cells[i] != 65535)
+		if (req.hostile_cells[i] < a3env::MAP_WIDTH*a3env::MAP_WIDTH)
 		{
-			ROS_INFO("hostile int: %d", req.hostile_cells[i]);
 			int hostile_x = req.hostile_cells[i] / a3env::MAP_WIDTH;
 			int hostile_y = req.hostile_cells[i] % a3env::MAP_WIDTH;
 			world[hostile_x][hostile_y] = a3env::BLOCK_WALL;
@@ -117,10 +116,12 @@ bool plan_callback(a3planner::plan::Request &req, a3planner::plan::Response &res
 	ROS_INFO("Marked hostiles in world view successfully.");
 	for (int i=0; i < a3env::NUM_AGENTS; i++)
 	{
-		ROS_INFO("agent int: %d", req.agent_cells[i]);
+		if (req.agent_cells[i] < a3env::MAP_WIDTH*a3env::MAP_WIDTH)
+		{
 		int agent_x = req.agent_cells[i] / a3env::MAP_WIDTH;
 		int agent_y = req.agent_cells[i] % a3env::MAP_WIDTH;
 		world[agent_x][agent_y] = a3env::BLOCK_WALL;
+		}
 	}
 	ROS_INFO("Marked hostiles and agents in world view successfully.");
 	// get moves
